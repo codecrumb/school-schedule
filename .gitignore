@@ -3,6 +3,7 @@ node_modules/
 *.log
 working calendar.html
 *.code-workspace
+PWA_SETUP.md
 .vscode/
 .DS_Store
 .env
