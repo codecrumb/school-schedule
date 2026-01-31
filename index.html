@@ -20,8 +20,13 @@
 
     <!-- Theme color for Safari / Chrome -->
     <meta name="theme-color" content="#1e293b">
-        <!-- Tailwind CSS CDN -->
+
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- DOMPurify for XSS protection -->
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.8/dist/purify.min.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
         
@@ -1754,8 +1759,8 @@
                     if (event.description) {
                         tooltipHTML += `<div class="mt-2 pt-2 border-t border-custom">${escapeHtml(event.description)}</div>`;
                     }
-                    
-                    tooltip.innerHTML = tooltipHTML;
+
+                    tooltip.innerHTML = DOMPurify.sanitize(tooltipHTML);
                     eventDot.appendChild(tooltip);
                     
                     dayCell.appendChild(eventDot);
@@ -1826,8 +1831,8 @@
                 if (event.description) {
                     tooltipHTML += `<div class="mt-2 pt-2 border-t border-custom">${escapeHtml(event.description)}</div>`;
                 }
-                
-                tooltip.innerHTML = tooltipHTML;
+
+                tooltip.innerHTML = DOMPurify.sanitize(tooltipHTML);
                 card.appendChild(tooltip);
             }
             
@@ -2175,10 +2180,10 @@
                 return;
             }
             
-            section.innerHTML = `
+            section.innerHTML = DOMPurify.sanitize(`
                 <div class="now-view-section-title">${t('nowView.sectionTitles.earlierToday')}</div>
                 ${pastEvents.map(event => createNowViewEventCardHTML(event, 'past')).join('')}
-            `;
+            `);
         }
         
         function updateCurrentEventSection(currentEvent, nextEvent) {
@@ -2205,8 +2210,8 @@
                     : `${secondsLeft}s`;
                 
                 const typeClass = eventType === 'test' ? ' event-test' : (eventType === 'other' ? ' event-other' : '');
-                
-                section.innerHTML = `
+
+                section.innerHTML = DOMPurify.sanitize(`
                     <div class="now-view-section-title">${t('nowView.sectionTitles.now')}</div>
                     <div class="current-event-card${typeClass}">
                         <div class="current-event-title">${escapeHtml(displayTitle)}</div>
@@ -2219,7 +2224,7 @@
                             <div class="current-event-progress-fill" style="width: ${progress}%"></div>
                         </div>
                     </div>
-                `;
+                `);
             } else if (nextEvent) {
                 // Between events - show next event info
                 const displayTitle = stripEventTag(nextEvent.title);
@@ -2227,8 +2232,8 @@
                 const nextStart = new Date(nextEvent.start);
                 const minutesUntil = Math.floor((nextStart - now) / 60000);
                 const units = translations[currentLang].nowView.timeUnits;
-                
-                section.innerHTML = `
+
+                section.innerHTML = DOMPurify.sanitize(`
                     <div class="between-events-message">
                         <svg class="w-16 h-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -2236,7 +2241,7 @@
                         <div class="text-lg font-medium text-primary">${t('nowView.betweenEvents.title')}</div>
                         <div class="text-sm">${t('nowView.betweenEvents.nextPrefix')} ${escapeHtml(displayTitle)} ${units.inSuffix} ${minutesUntil} ${units.min}</div>
                     </div>
-                `;
+                `);
             } else {
                 // No more events today
                 section.innerHTML = `
@@ -2259,10 +2264,10 @@
                 return;
             }
             
-            section.innerHTML = `
+            section.innerHTML = DOMPurify.sanitize(`
                 <div class="now-view-section-title">${t('nowView.sectionTitles.comingUp')}</div>
                 ${nextEvents.map(event => createNowViewEventCardHTML(event, 'next')).join('')}
-            `;
+            `);
         }
         
         function createNowViewEventCardHTML(event, type) {
