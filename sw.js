@@ -1,6 +1,6 @@
 // Service Worker for School Schedule Calendar PWA
-// Version: 1.0.1 - Security update
-const CACHE_VERSION = 'v1.0.1';
+// Version: 1.0.2 - Security update (corrected postMessage validation)
+const CACHE_VERSION = 'v1.0.2';
 const CACHE_NAME = `school-schedule-${CACHE_VERSION}`;
 const CACHE_NAME_DYNAMIC = `school-schedule-dynamic-${CACHE_VERSION}`;
 
@@ -13,7 +13,6 @@ const PRECACHE_URLS = [
   '/apple-touch-icon.png',
   // External CDN resources (cached separately)
   'https://cdn.tailwindcss.com',
-  'https://cdn.jsdelivr.net/npm/dompurify@3.0.8/dist/purify.min.js',
   'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap'
 ];
 
@@ -243,11 +242,22 @@ async function updateCacheInBackground(request) {
 }
 
 // Message handler for manual cache updates
-self.addEventListener('message', (event) => {
-  // Validate message origin for security
-  if (event.origin && event.origin !== self.location.origin) {
-    console.warn('[SW] Rejected message from unauthorized origin:', event.origin);
-    return;
+self.addEventListener('message', async (event) => {
+  // Validate message origin for security (CWE-20)
+  if (event.source && event.source.id) {
+    try {
+      const client = await clients.get(event.source.id);
+      if (client) {
+        const clientOrigin = new URL(client.url).origin;
+        if (clientOrigin !== self.location.origin) {
+          console.warn('[SW] Rejected message from unauthorized origin:', clientOrigin);
+          return;
+        }
+      }
+    } catch (error) {
+      console.warn('[SW] Could not validate message origin:', error);
+      return;
+    }
   }
 
   if (event.data && event.data.type === 'SKIP_WAITING') {
