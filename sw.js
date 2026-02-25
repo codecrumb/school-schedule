@@ -242,22 +242,12 @@ async function updateCacheInBackground(request) {
 }
 
 // Message handler for manual cache updates
-self.addEventListener('message', async (event) => {
-  // Validate message origin for security (CWE-20)
-  if (event.source && event.source.id) {
-    try {
-      const client = await clients.get(event.source.id);
-      if (client) {
-        const clientOrigin = new URL(client.url).origin;
-        if (clientOrigin !== self.location.origin) {
-          console.warn('[SW] Rejected message from unauthorized origin:', clientOrigin);
-          return;
-        }
-      }
-    } catch (error) {
-      console.warn('[SW] Could not validate message origin:', error);
-      return;
-    }
+self.addEventListener('message', (event) => {
+  // Validate sender is a controlled client from the same origin.
+  // Browsers already enforce this for service workers, but being explicit
+  // silences false-positive postMessage-origin warnings and adds defence-in-depth.
+  if (!event.source || new URL(event.source.url).origin !== self.location.origin) {
+    return;
   }
 
   if (event.data && event.data.type === 'SKIP_WAITING') {
