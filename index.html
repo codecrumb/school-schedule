@@ -25,6 +25,23 @@
     <!-- Theme color for Safari / Chrome -->
     <meta name="theme-color" content="#1e293b">
 
+    <!-- Apply theme immediately to prevent flash of wrong theme -->
+    <script>
+        (function() {
+            var theme = localStorage.getItem('theme') ||
+                (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark-mode');
+            }
+            // Suppress all transitions until page is fully loaded
+            document.documentElement.classList.add('no-transition');
+            window.addEventListener('load', function() {
+                document.documentElement.classList.remove('no-transition');
+            });
+        })();
+    </script>
+
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -34,6 +51,10 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
         
+        .no-transition * {
+            transition: none !important;
+        }
+
         :root {
             --bg-primary: #ffffff;
             --bg-secondary: #f9fafb;
