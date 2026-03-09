@@ -1606,7 +1606,7 @@
             if (event.description) {
                 const notes = document.createElement('div');
                 notes.className = 'text-sm text-secondary mt-3 pt-3 border-t border-custom whitespace-pre-wrap';
-                notes.textContent = event.description;
+                notes.innerHTML = linkifyText(event.description);
                 card.appendChild(notes);
             }
             
@@ -2262,7 +2262,7 @@
                         </div>
                         <div class="current-event-countdown">${countdownText}</div>
                         ${currentEvent.location ? `<div class="current-event-description">${renderLocation(currentEvent.location)}</div>` : ''}
-                        ${currentEvent.description ? `<div class="current-event-description">${escapeHtml(currentEvent.description)}</div>` : ''}
+                        ${currentEvent.description ? `<div class="current-event-description" style="white-space:pre-wrap">${linkifyText(currentEvent.description)}</div>` : ''}
                         <div class="current-event-progress-bar">
                             <div class="current-event-progress-fill" style="width: ${progress}%"></div>
                         </div>
@@ -2340,7 +2340,7 @@
                     </div>
                     <div class="event-card-title">${escapeHtml(displayTitle)}</div>
                     ${event.location ? `<div class="event-card-description">${renderLocation(event.location)}</div>` : ''}
-                    ${event.description ? `<div class="event-card-description">${escapeHtml(event.description)}</div>` : ''}
+                    ${event.description ? `<div class="event-card-description" style="white-space:pre-wrap">${linkifyText(event.description)}</div>` : ''}
                 </div>
             `;
         }
@@ -2437,6 +2437,14 @@
             }
             return `<span class="location-text">
                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${escapeHtml(location.trim())}</span>`;
+        }
+
+        function linkifyText(text) {
+            if (!text) return '';
+            return escapeHtml(text).replace(
+                /(https?:\/\/[^\s<>"]+)/g,
+                '<a href="$1" target="_blank" rel="noopener noreferrer" class="location-link" style="display:inline;word-break:break-all;">$1</a>'
+            );
         }
 
         function escapeHtml(text) {
