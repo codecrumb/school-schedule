@@ -2441,6 +2441,46 @@
 
         function linkifyText(text) {
             if (!text) return '';
+
+            // If the description contains HTML tags, parse and sanitize it
+            if (/<[a-zA-Z][^>]*>/.test(text)) {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(text, 'text/html');
+                const allowedTags = new Set(['A', 'BR', 'P', 'B', 'I', 'STRONG', 'EM', 'U', 'UL', 'OL', 'LI', 'SPAN']);
+
+                function sanitizeNode(node) {
+                    if (node.nodeType === Node.TEXT_NODE) return node.cloneNode();
+                    if (node.nodeType !== Node.ELEMENT_NODE) return null;
+                    if (!allowedTags.has(node.tagName)) {
+                        return document.createTextNode(node.textContent);
+                    }
+                    const el = document.createElement(node.tagName);
+                    if (node.tagName === 'A') {
+                        const href = node.getAttribute('href') || '';
+                        if (/^https?:\/\//i.test(href)) {
+                            el.href = href;
+                            el.target = '_blank';
+                            el.rel = 'noopener noreferrer';
+                            el.className = 'location-link';
+                            el.style.cssText = 'display:inline;word-break:break-all;';
+                        }
+                    }
+                    for (const child of node.childNodes) {
+                        const s = sanitizeNode(child);
+                        if (s) el.appendChild(s);
+                    }
+                    return el;
+                }
+
+                const out = document.createElement('div');
+                for (const child of doc.body.childNodes) {
+                    const s = sanitizeNode(child);
+                    if (s) out.appendChild(s);
+                }
+                return out.innerHTML;
+            }
+
+            // Plain text: escape then linkify bare URLs
             return escapeHtml(text).replace(
                 /(https?:\/\/[^\s<>"]+)/g,
                 '<a href="$1" target="_blank" rel="noopener noreferrer" class="location-link" style="display:inline;word-break:break-all;">$1</a>'
