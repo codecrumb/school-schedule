@@ -1,6 +1,6 @@
 // Service Worker for School Schedule Calendar PWA
-// Version: 1.0.0
-const CACHE_VERSION = 'v1.0.0';
+// Version: 1.1.0
+const CACHE_VERSION = 'v1.1.0';
 const CACHE_NAME = `school-schedule-${CACHE_VERSION}`;
 const CACHE_NAME_DYNAMIC = `school-schedule-dynamic-${CACHE_VERSION}`;
 
@@ -9,10 +9,9 @@ const PRECACHE_URLS = [
   '/',
   '/index.html',
   '/translations.js',
+  '/tailwind.css',
   '/favicon.ico',
   '/apple-touch-icon.png',
-  // External CDN resources (cached separately)
-  'https://cdn.tailwindcss.com',
   'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap'
 ];
 
@@ -91,9 +90,8 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Skip cross-origin requests that aren't CDN resources or fonts
+  // Skip cross-origin requests that aren't fonts
   if (url.origin !== location.origin &&
-      !url.href.includes('cdn.tailwindcss.com') &&
       !url.href.includes('fonts.googleapis.com') &&
       !url.href.includes('fonts.gstatic.com')) {
     return;
