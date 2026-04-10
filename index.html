@@ -1277,11 +1277,8 @@
 
             updateHeader();
             
-            // Load cached events first for instant display
-            loadCachedEvents();
-            
-            // Fetch fresh events
-            fetchEvents();
+            // Load cached events first for instant display, then fetch fresh
+            loadCachedEvents().then(() => fetchEvents());
             
             // Smart refresh - only when page is visible
             setInterval(() => {
@@ -1417,23 +1414,56 @@
         });
         
         // ==========================================
+        // INDEXEDDB SETUP
+        // ==========================================
+
+        function openCacheDB() {
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open('SchoolScheduleDB', 1);
+                req.onupgradeneeded = e => {
+                    e.target.result.createObjectStore('cache', { keyPath: 'key' });
+                };
+                req.onsuccess = e => resolve(e.target.result);
+                req.onerror = e => reject(e.target.error);
+            });
+        }
+
+        function dbPut(store, key, value) {
+            return openCacheDB().then(db => new Promise((resolve, reject) => {
+                const tx = db.transaction(store, 'readwrite');
+                tx.objectStore(store).put({ key, value });
+                tx.oncomplete = resolve;
+                tx.onerror = e => reject(e.target.error);
+            }));
+        }
+
+        function dbGet(store, key) {
+            return openCacheDB().then(db => new Promise((resolve, reject) => {
+                const tx = db.transaction(store, 'readonly');
+                const req = tx.objectStore(store).get(key);
+                req.onsuccess = e => resolve(e.target.result?.value);
+                req.onerror = e => reject(e.target.error);
+            }));
+        }
+
+        // ==========================================
         // OFFLINE CACHE
         // ==========================================
-        
-        function saveCachedEvents() {
+
+        async function saveCachedEvents() {
             try {
-                localStorage.setItem('calendar_events', JSON.stringify(events));
-                localStorage.setItem('calendar_last_updated', new Date().toISOString());
+                await dbPut('cache', 'calendar_events', events);
+                await dbPut('cache', 'calendar_last_updated', new Date().toISOString());
             } catch (e) {
                 console.warn('Could not save events to cache:', e);
             }
         }
-        
-        function loadCachedEvents() {
+
+        async function loadCachedEvents() {
             try {
-                const cached = localStorage.getItem('calendar_events');
+                const cached = await dbGet('cache', 'calendar_events');
                 if (cached) {
-                    events = JSON.parse(cached);
+                    events = cached;
                     renderCalendar();
                     updateNowView();
                     checkAutoAdvance(); // Check if we should advance with cached data
