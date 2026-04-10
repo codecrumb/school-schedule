@@ -1,0 +1,26 @@
+{
+  "name": "school-schedule",
+  "version": "1.0.0",
+  "description": "A simple, minimal, and fast web app for viewing and managing a school schedule.  \r Built with **HTML**, **JavaScript**, and **Tailwind CSS** — no frameworks, no dependencies, just clean code.",
+  "main": "sw.js",
+  "scripts": {
+    "build": "tailwindcss -i ./src/input.css -o ./tailwind.css --minify",
+    "watch": "tailwindcss -i ./src/input.css -o ./tailwind.css --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/codecrumb/school-schedule.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/codecrumb/school-schedule/issues"
+  },
+  "homepage": "https://github.com/codecrumb/school-schedule#readme",
+  "devDependencies": {
+    "tailwindcss": "^4.2.2",
+    "tailwindcss": "^4.2.2"
+  }
+}

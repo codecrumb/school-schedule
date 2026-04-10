@@ -1,0 +1,4 @@
+@import "tailwindcss";
+
+/* Dark mode: activate when .dark-mode class is on a parent element */
+@custom-variant dark (.dark-mode &);
