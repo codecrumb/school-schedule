@@ -240,19 +240,52 @@ async function updateCacheInBackground(request) {
 }
 
 // Message handler for manual cache updates
+// Only a small, fixed set of message types is accepted, and messages are
+// required to come from a same-origin window client. This prevents unrelated
+// or malformed postMessage payloads (e.g. from third-party scripts) from
+// triggering service-worker behavior.
+const ALLOWED_MESSAGE_TYPES = new Set(['SKIP_WAITING', 'CLEAR_CACHE']);
+
+function isTrustedMessage(event) {
+  // event.data must be a plain object with a known string `type`.
+  const data = event.data;
+  if (!data || typeof data !== 'object' || typeof data.type !== 'string') {
+    return false;
+  }
+  if (!ALLOWED_MESSAGE_TYPES.has(data.type)) {
+    return false;
+  }
+
+  // When available, require the sender to be a same-origin window client.
+  // `event.source` may be null for messages posted before the client was
+  // fully registered, in which case we fall back to the type/shape check
+  // above (same-origin is already enforced by the browser for SW messages).
+  const source = event.source;
+  if (source && typeof source.url === 'string') {
+    try {
+      const sourceOrigin = new URL(source.url).origin;
+      if (sourceOrigin !== self.location.origin) {
+        return false;
+      }
+    } catch (_) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
+  if (!isTrustedMessage(event)) {
+    return;
+  }
+
+  if (event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
+    return;
   }
 
-  if (event.data && event.data.type === 'CACHE_URLS') {
-    event.waitUntil(
-      caches.open(CACHE_NAME_DYNAMIC)
-        .then((cache) => cache.addAll(event.data.urls))
-    );
-  }
-
-  if (event.data && event.data.type === 'CLEAR_CACHE') {
+  if (event.data.type === 'CLEAR_CACHE') {
     event.waitUntil(
       caches.keys().then((cacheNames) => {
         return Promise.all(
