@@ -9,7 +9,7 @@ const PRECACHE_URLS = [
   '/',
   '/index.html',
   '/assets/css/tailwind.css',
-  '/assets/icons/favicon.ico',
+  '/favicon.ico',
   '/assets/icons/apple-touch-icon.png',
   'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap'
 ];
