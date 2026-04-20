@@ -1,6 +1,6 @@
 // Service Worker for School Schedule Calendar PWA
-// Version: 1.1.0
-const CACHE_VERSION = 'v1.1.0';
+// Version: 1.2.0
+const CACHE_VERSION = 'v1.2.0';
 const CACHE_NAME = `school-schedule-${CACHE_VERSION}`;
 const CACHE_NAME_DYNAMIC = `school-schedule-dynamic-${CACHE_VERSION}`;
 
@@ -8,16 +8,15 @@ const CACHE_NAME_DYNAMIC = `school-schedule-dynamic-${CACHE_VERSION}`;
 const PRECACHE_URLS = [
   '/',
   '/index.html',
-  '/translations.js',
-  '/tailwind.css',
-  '/favicon.ico',
-  '/apple-touch-icon.png',
+  '/assets/css/tailwind.css',
+  '/assets/icons/favicon.ico',
+  '/assets/icons/apple-touch-icon.png',
   'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap'
 ];
 
 // Dynamic cache patterns (API calls, fonts, etc.)
 const DYNAMIC_CACHE_PATTERNS = [
-  /\/functions\/api\/events/,
+  /\/api\/events/,
   /fonts\.gstatic\.com/,
   /\.woff2$/,
   /\.woff$/
@@ -98,7 +97,7 @@ self.addEventListener('fetch', (event) => {
   }
 
   // API requests - Cache first, then network with background update
-  if (url.pathname.includes('/functions/api/events')) {
+  if (url.pathname.includes('/api/events')) {
     event.respondWith(
       handleAPIRequest(request)
     );
@@ -300,11 +299,11 @@ self.addEventListener('message', (event) => {
 self.addEventListener('sync', (event) => {
   if (event.tag === 'sync-events') {
     event.waitUntil(
-      fetch('/functions/api/events')
+      fetch('/api/events')
         .then((response) => {
           if (response.status === 200) {
             const cache = caches.open(CACHE_NAME_DYNAMIC);
-            cache.then((c) => c.put('/functions/api/events', response.clone()));
+            cache.then((c) => c.put('/api/events', response.clone()));
           }
         })
         .catch((error) => {
